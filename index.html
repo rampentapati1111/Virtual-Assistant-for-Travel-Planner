@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <title>A crazy tourist</title>
+    <link rel="stylesheet" href="./static/style.css">
+    <script
+			  src="https://code.jquery.com/jquery-3.2.1.js"
+			  integrity="sha256-DZAnKJ/6XZ9si04Hgrsxu/8s717jcIzLy3oi35EouyE="
+			  crossorigin="anonymous">
+	</script>
+    <script src="https://code.responsivevoice.org/responsivevoice.js?key=1j8eZc0B"></script>
+    <script src="https://code.jquery.com/jquery-2.1.4.min.js"></script>
+</head>
+
+<body>
+   
+    <div class="container">
+        <!-- chat box -->
+        <div class="chat-box">
+            <!-- client -->
+            <div class="client">
+                <img src="./static/logo.png" alt="logo" />
+                <div class="client-info">
+                    <h2>A Crazy Tourist Bot</h2>
+                    <p>online</p>
+                </div>
+            </div>
+             
+           
+            <div >
+                <table id="productTable" class="table table-bordered table-condensed table-striped">
+                  <tr><td class='client-chat'>Telangana <select id='voiceList'></select></td></tr>
+                </table>
+            </div>
+
+            <!-- input field section -->
+                
+                <div class="chat-input">
+                    <i class="fa fa-microphone" style="font-size:30px;color:red"  onclick="record()"></i>
+                    <input type="text" placeholder="Enter message" id="candidate" />
+                    <button class="send-btn" onclick="productUpdate();" id="sum">
+                        <img src="./static/send.png" alt="send-btn">
+                    </button>
+                </div>
+        </div>
+            
+        <!-- button -->
+        <div class="chat-btn">
+            <img src="./static/Circle-icons-chat.svg.png" alt="chat box icon btn">
+        </div>
+    </div>
+    <script type="text/javascript">
+       var synth = window.speechSynthesis;
+        var voices = [];
+
+        PopulateVoices();
+        if(speechSynthesis !== undefined){
+            speechSynthesis.onvoiceschanged = PopulateVoices;
+        }
+        var server = "http://127.0.0.1:5000";
+        var op_nu={'str':""};
+        function PopulateVoices(){
+            voices = synth.getVoices();
+            console.log(voiceList.selectedIndex);
+            var selectedIndex = voiceList.selectedIndex < 0 ? 0 : voiceList.selectedIndex;
+            voiceList.innerHTML = '';
+            voices.forEach((voice)=>{
+                var listItem = document.createElement('option');
+                listItem.textContent = voice.name;
+                listItem.setAttribute('data-lang', voice.lang);
+                listItem.setAttribute('data-name', voice.name);
+                voiceList.appendChild(listItem);
+            });
+            console.log(voiceList.selectedIndex);
+            voiceList.selectedIndex = selectedIndex;
+        }
+        function update_var()
+			{
+				var n1 = String($("#candidate").val());
+				
+				op_nu['str']=n1;
+			}
+            $( function() {
+				$( "#sum" ).click(function() {
+					var appdir='/op';
+					
+					update_var();
+					
+					
+					$.ajax({
+  						type: "POST",
+  						url:server+appdir,
+  						data: JSON.stringify(op_nu),
+  						dataType: 'json'
+					}).done(function(data) { 
+						console.log(data);
+						$('#candidate').val(data['str']);
+                        if ($("#candidate").val() != null && $("#candidate").val() != '') {
+                            // Add product to Table
+                            productAddToTable();
+                
+                            // Clear form fields
+                            formClear();
+
+                            // Focus to product name field
+                            $("#candidate").focus();
+                        }
+
+						
+					});
+				});
+  			});
+            function record() {
+                var recognition = new webkitSpeechRecognition();
+                recognition.lang = "en-GB";
+
+                recognition.onresult = function(event) {
+                     console.log(event);
+                     console.log(event.results[0][0].transcript);
+                    document.getElementById('candidate').value = event.results[0][0].transcript;
+                    
+                        
+                            // Add product to Table
+                            $("#productTable tbody").append("<tr>" +
+                            "<td class='my-chat'>" + $("#candidate").val() + "</td>" +
+                            "</tr>");
+                            
+                            
+                            // Clear form fields
+                            //formClear();
+
+                            // Focus to product name field
+                            $("#candidate").focus();
+                       
+                    var appdir='/op';
+					
+					update_var();
+					
+					
+					$.ajax({
+  						type: "POST",
+  						url:server+appdir,
+  						data: JSON.stringify(op_nu),
+  						dataType: 'json'
+					}) 
+                    
+                    
+                    
+                    { 
+						console.log(data);
+						$('#candidate').val(data['str']);
+                        if ($("#candidate").val() != null && $("#candidate").val() != '') {
+                            
+                            // Add product to Table
+                            productAddToTable();
+                            var txtInput = document.querySelector('#candidate');
+                            var voiceList = document.querySelector('#voiceList');
+                            var toSpeak = new SpeechSynthesisUtterance(txtInput.value);
+                            var selectedVoiceName = voiceList.selectedOptions[0].getAttribute('data-name');
+                            voices.forEach((voice)=>{
+                                if(voice.name === selectedVoiceName){
+                                    toSpeak.voice = voice;
+                                }
+                            });
+                            synth.speak(toSpeak);
+
+
+                            // Clear form fields
+                            formClear();
+
+                            // Focus to product name field
+                            $("#candidate").focus();
+                            
+                        }
+                        
+						
+					});
+                }
+                recognition.start();
+            }
+               
+                
+
+            
+
+            function productUpdate() {
+            if ($("#candidate").val() != null && $("#candidate").val() != '') {
+                if ($("#productTable tbody").length == 0) {
+                    $("#productTable").append("<tbody></tbody>");
+                }
+
+                // Append product to the table
+                $("#productTable tbody").append("<tr>" +
+                "<td class='my-chat'>" + $("#candidate").val() + "</td>" +
+                "</tr>");
+                
+                // Clear form fields
+                //formClear();
+
+                // Focus to product name field
+                $("#candidate").focus();
+            }
+       
+
+    
+    }
+    function productAddToTable() {
+    // First check if a <tbody> tag exists, add one if not
+    if ($("#productTable tbody").length == 0) {
+        $("#productTable").append("<tbody></tbody>");
+    }
+
+    // Append product to the table
+    $("#productTable tbody").append("<tr>" +
+        "<td class='client-chat'>" + $("#candidate").val() + "</td>" +
+        "</tr>");
+        
+   
+        
+    }
+    function formClear() {
+    $("#candidate").val("");
+    
+    }
+    
+
+
+
+    </script>
+    
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.0/jquery.min.js"></script>
+    <script src="./static/jquery-3.4.1.min.js"></script>
+    <script src="./static/script.js"></script>
+</body>
+
+</html>
